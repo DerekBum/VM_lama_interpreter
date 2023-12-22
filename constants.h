@@ -50,7 +50,7 @@ namespace Func_comms {
     const char cBEGIN = 3;
     const char CLOSURE = 4;
     const char CALLC = 5;
-    const char CALL_2_args = 6;
+    const char CALL = 6;
     const char TAG = 7;
     const char ARRAY = 8;
     const char FAIL = 9;

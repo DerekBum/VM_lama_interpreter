@@ -51,24 +51,8 @@ void __post_gc_subst () {}
 # endif
 /* end */
 
-# define STRING_TAG  0x00000001
-# define ARRAY_TAG   0x00000003
-# define SEXP_TAG    0x00000005
-# define CLOSURE_TAG 0x00000007
-# define UNBOXED_TAG 0x00000009 // Not actually a tag; used to return from LkindOf
-
-# define LEN(x) ((x & 0xFFFFFFF8) >> 3)
-# define TAG(x)  (x & 0x00000007)
-
-# define TO_DATA(x) ((data*)((char*)(x)-sizeof(int)))
-# define TO_SEXP(x) ((sexp*)((char*)(x)-2*sizeof(int)))
 # ifdef DEBUG_PRINT // GET_SEXP_TAG is necessary for printing from space
-# define GET_SEXP_TAG(x) (LEN(x))
 #endif
-
-# define UNBOXED(x)  (((int) (x)) &  0x0001)
-# define UNBOX(x)    (((int) (x)) >> 1)
-# define BOX(x)      ((((int) (x)) << 1) | 0x0001)
 
 /* GC extra roots */
 # define MAX_EXTRA_ROOTS_NUMBER 32
@@ -148,24 +132,6 @@ void Lassert (void *f, char *s, ...) {
         vfailure (s, args);
     }
 }
-
-# define ASSERT_BOXED(memo, x)               \
-  do if (UNBOXED(x)) failure ("boxed value expected in %s\n", memo); while (0)
-# define ASSERT_UNBOXED(memo, x)             \
-  do if (!UNBOXED(x)) failure ("unboxed value expected in %s\n", memo); while (0)
-# define ASSERT_STRING(memo, x)              \
-  do if (!UNBOXED(x) && TAG(TO_DATA(x)->tag) \
-	 != STRING_TAG) failure ("string value expected in %s\n", memo); while (0)
-
-typedef struct {
-    int tag;
-    char contents[0];
-} data;
-
-typedef struct {
-    int tag;
-    data contents;
-} sexp;
 
 extern void* alloc    (size_t);
 extern void* Bsexp    (int n, ...);
@@ -332,8 +298,6 @@ extern int Llength (void *p) {
     a = TO_DATA(p);
     return BOX(LEN(a->tag));
 }
-
-static char* chars = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'";
 
 extern char* de_hash (int);
 
@@ -898,22 +862,6 @@ extern void* Belem (void *p, int i) {
     return (void*) ((int*) a->contents)[i];
 }
 
-extern void* Belem_unboxed (void *p, int i) {
-    data *a = (data *)BOX(NULL);
-
-    ASSERT_BOXED(".elem:1", p);
-    ASSERT_UNBOXED(".elem:2", i);
-
-    a = TO_DATA(p);
-    i = UNBOX(i);
-
-    if (TAG(a->tag) == STRING_TAG) {
-        return a->contents[i];
-    }
-
-    return ((int*) a->contents) + i;
-}
-
 extern void* LmakeArray (int length) {
     data *r;
     int n, *p;
@@ -1447,7 +1395,7 @@ extern void* LgetEnv (char *var) {
     void *s;
 
     if (e == NULL)
-        return BOX(0);
+        return (void*) BOX(0);
 
     __pre_gc ();
 
@@ -1579,9 +1527,9 @@ extern void* Lfexists (char *fname) {
 
     f = fopen (fname, "r");
 
-    if (f) return BOX(1);
+    if (f) return (void*) BOX(1);
 
-    return BOX(0);
+    return (void*) BOX(0);
 }
 
 extern void* Lfst (void *v) {

@@ -1,6 +1,7 @@
 ## Lama interpreter
 
 To use my `Lama` interpreter on `C++` lang, you need to follow theese steps:
+
 0) Be sure to install the `lamac` compiler from the [Lama repository](https://github.com/PLTools/Lama). 
 1) Create an executable using `make` commang from the root of the project:
 ```bash
@@ -35,7 +36,7 @@ cd ../
 
 ```
 Lamac interpreter:
-Sort	2.17
+Sort	2.12
 Lama_C interpreter:
-Sort	2.21
+Sort	1.08
 ```
